@@ -1,0 +1,61 @@
+-- 2302
+select vr.created_at , vr.warn_id, mr.manual_res '客服判定结果（0正确，1错误，2未知）' ,vr.res '算法识别结果（0正例，1负例）', '' as '指标收集', vr.result_json '判定结果', vr.pose_metrics '角度指标', vr.url '视频url' 
+from vision_res vr 
+inner join manual_res mr on vr.warn_id  = mr.warn_id 
+where 
+vr.warn_id  in (
+select vt.warn_id from (
+select vr2.warn_id,count(*) wcnt
+from vision_res vr2 where vr2.created_at > '2026-05-20' and vr2.created_at < '2026-05-21'
+group by vr2.warn_id 
+having wcnt = 1
+) vt
+)
+union all
+
+-- 194
+select distinct vr.created_at , vr.warn_id, mr.manual_res '客服判定结果（0正确，1错误，2未知）' ,vr.res '算法识别结果（0正例，1负例）', '' as '指标收集', vr.result_json '判定结果', vr.pose_metrics '角度指标', vr.url '视频url' 
+from vision_res vr 
+inner join manual_res mr on vr.warn_id  = mr.warn_id and mr.manual_res = 0
+where 
+vr.warn_id  in (
+select vt.warn_id from (
+select vr2.warn_id,count(*) wcnt
+from vision_res vr2 where vr2.created_at > '2026-05-20' and vr2.created_at < '2026-05-21'
+group by vr2.warn_id 
+having wcnt > 1
+) vt
+)
+
+union all
+
+select distinct vr.created_at , vr.warn_id, mr.manual_res '客服判定结果（0正确，1错误，2未知）' ,vr.res '算法识别结果（0正例，1负例）', '' as '指标收集', vr.result_json '判定结果', vr.pose_metrics '角度指标', vr.url '视频url' 
+from vision_res vr 
+inner join manual_res mr on vr.warn_id  = mr.warn_id and mr.manual_res <> 0
+where 
+vr.warn_id  in (
+select vt.warn_id from (
+select vr2.warn_id,count(*) wcnt
+from vision_res vr2 where vr2.created_at > '2026-05-20' and vr2.created_at < '2026-05-21'
+group by vr2.warn_id 
+having wcnt > 1
+) vt
+)
+and vr.warn_id not in 
+(
+  select t.warn_id from 
+  (
+select distinct vr.created_at , vr.warn_id, mr.manual_res '客服判定结果（0正确，1错误，2未知）' ,vr.res '算法识别结果（0正例，1负例）', '' as '指标收集', vr.result_json '判定结果', vr.url '视频url' 
+from vision_res vr 
+inner join manual_res mr on vr.warn_id  = mr.warn_id and mr.manual_res = 0
+where 
+            vr.warn_id  in (
+select vt.warn_id from (
+select vr2.warn_id,count(*) wcnt
+from vision_res vr2 where vr2.created_at > '2026-05-20' and vr2.created_at < '2026-05-21'
+group by vr2.warn_id 
+having wcnt > 1
+) vt
+)
+) t
+) 
